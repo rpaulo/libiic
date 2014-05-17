@@ -23,80 +23,133 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
+#include <stdio.h>
+#include <unistd.h>
+#include <strings.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 #include <libiic.h>
 
 iic_handle_t
 iic_open(unsigned int unit)
 {
+	char device[16];
+
+	snprintf(device, sizeof(device), "/dev/iic%d", unit);
+
+	return iic_open_device(device);
 }
 
 iic_handle_t
-iic_open_device(const char *device);
+iic_open_device(const char *device)
 {
+	int fd;
+	
+	fd = open(device, O_RDWR);
+	if (fd < 0)
+		return IIC_INVALID_HANDLE;
+
+	return fd;
 }
 
 void
-iic_close(iic_handle_t handle);
+iic_close(iic_handle_t handle)
 {
+	close(handle);
 }
 
 int
-iic_set_width(iic_handle_t, uint8_t)
+iic_read_1(iic_handle_t handle, int slave, uint8_t *v)
 {
+	return iic_read_n(handle, slave, v, 1);
 }
 
 int
-iic_read_1(iic_handle_t, uint8_t *)
+iic_read_2(iic_handle_t handle, int slave, uint16_t *v)
 {
+	return iic_read_n(handle, slave, v, 2);
 }
 
 int
-iic_read_2(iic_handle_t, uint16_t *)
+iic_read_4(iic_handle_t handle, int slave, uint32_t *v)
 {
+	return iic_read_n(handle, slave, v, 4);
 }
 
 int
-iic_read_4(iic_handle_t, uint32_t *)
+iic_read_8(iic_handle_t handle, int slave, uint64_t *v)
 {
+	return iic_read_n(handle, slave, v, 8);
 }
 
 int
-iic_read_8(iic_handle_t, uint64_t *)
+iic_read_n(iic_handle_t handle, int slave, void *v, size_t n)
 {
+	struct iic_msg msg;
+	struct iic_rdwr_data rdwr;
+
+	bzero(&msg, sizeof(msg));
+	bzero(&rdwr, sizeof(rdwr));
+
+	msg.slave = slave;
+	msg.flags = IIC_M_RD;
+	msg.len = n;
+	msg.buf = v;
+	rdwr.nmsgs = 1;
+	rdwr.msgs = &msg;
+
+	return ioctl(handle, I2CRDWR, &rdwr);
 }
 
 int
-iic_read_n(iic_handle_t, uint8_t *, size_t)
+iic_write_1(iic_handle_t handle, int slave, uint8_t v)
 {
+	return iic_write_n(handle, slave, &v, 1);
 }
 
 int
-iic_write_1(iic_handle_t, uint8_t)
+iic_write_2(iic_handle_t handle, int slave, uint16_t v)
 {
+	return iic_write_n(handle, slave, &v, 2);
 }
 
 int
-iic_write_2(iic_handle_t, uint16_t)
+iic_write_4(iic_handle_t handle, int slave, uint32_t v)
 {
+	return iic_write_n(handle, slave, &v, 4);
 }
 
 int
-iic_write_4(iic_handle_t, uint32_t)
+iic_write_8(iic_handle_t handle, int slave, uint64_t v)
 {
+	return iic_write_n(handle, slave, &v, 8);
 }
 
 int
-iic_write_8(iic_handle_t, uint64_t)
+iic_write_n(iic_handle_t handle, int slave, void *v, size_t n)
 {
+	struct iic_msg msg;
+	struct iic_rdwr_data rdwr;
+
+	bzero(&msg, sizeof(msg));
+	bzero(&rdwr, sizeof(rdwr));
+
+	msg.slave = slave;
+	msg.flags = IIC_M_WR;
+	msg.len = n;
+	msg.buf = v;
+	rdwr.nmsgs = 1;
+	rdwr.msgs = &msg;
+
+	return ioctl(handle, I2CRDWR, &rdwr);
 }
 
 int
-iic_write_n(iic_handle_t, uint8_t *, size_t);
+iic_reset(iic_handle_t handle)
 {
-}
+	struct iiccmd cmd;
+	
+	bzero(&cmd, sizeof(cmd));
 
-int
-iic_reset(iic_handle_t)
-{
+	return (ioctl(handle, I2CRSTCARD, &cmd));
 }

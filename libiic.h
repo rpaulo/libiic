@@ -26,8 +26,8 @@
 #ifndef _LIBIIC_H_
 #define _LIBIIC_H_
 
-#include <sys/iic.h>
 #include <sys/types.h>
+#include <sys/iic.h>
 
 __BEGIN_DECLS
 
@@ -38,19 +38,17 @@ iic_handle_t	iic_open(unsigned int);
 iic_handle_t	iic_open_device(const char *);
 void		iic_close(iic_handle_t);
 
-int		iic_set_width(iic_handle_t, uint8_t);
+int		iic_read_1(iic_handle_t, int, uint8_t *);
+int		iic_read_2(iic_handle_t, int, uint16_t *);
+int		iic_read_4(iic_handle_t, int, uint32_t *);
+int		iic_read_8(iic_handle_t, int, uint64_t *);
+int		iic_read_n(iic_handle_t, int, void *, size_t);
 
-int		iic_read_1(iic_handle_t, uint8_t *);
-int		iic_read_2(iic_handle_t, uint16_t *);
-int		iic_read_4(iic_handle_t, uint32_t *);
-int		iic_read_8(iic_handle_t, uint64_t *);
-int		iic_read_n(iic_handle_t, uint8_t *, size_t);
-
-int		iic_write_1(iic_handle_t, uint8_t);
-int		iic_write_2(iic_handle_t, uint16_t);
-int		iic_write_4(iic_handle_t, uint32_t);
-int		iic_write_8(iic_handle_t, uint64_t);
-int		iic_write_n(iic_handle_t, uint8_t *, size_t);
+int		iic_write_1(iic_handle_t, int, uint8_t);
+int		iic_write_2(iic_handle_t, int, uint16_t);
+int		iic_write_4(iic_handle_t, int, uint32_t);
+int		iic_write_8(iic_handle_t, int, uint64_t);
+int		iic_write_n(iic_handle_t, int, void *, size_t);
 
 int		iic_reset(iic_handle_t);
 
