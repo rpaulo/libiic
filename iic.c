@@ -28,7 +28,11 @@
 #include <strings.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/endian.h>
 #include <libiic.h>
+
+static int iic_read_n_se(iic_handle_t, int, void *, size_t);
+static int iic_read_n_de(iic_handle_t, int, void *, size_t);
 
 iic_handle_t
 iic_open(unsigned int unit)
@@ -61,36 +65,94 @@ iic_close(iic_handle_t handle)
 int
 iic_read_1(iic_handle_t handle, int slave, uint8_t *v)
 {
-	return iic_read_n(handle, slave, v, 1);
+	return iic_read_n_se(handle, slave, v, 1);
+}
+
+int
+iic_read_2_le(iic_handle_t handle, int slave, uint16_t *v)
+{
+	return iic_read_n_le(handle, slave, v, 2);
+}
+
+int
+iic_read_2_be(iic_handle_t handle, int slave, uint16_t *v)
+{
+	return iic_read_n_be(handle, slave, v, 2);
 }
 
 int
 iic_read_2(iic_handle_t handle, int slave, uint16_t *v)
 {
-	return iic_read_n(handle, slave, v, 2);
+	return iic_read_n_se(handle, slave, v, 2);
+}
+
+int
+iic_read_4_le(iic_handle_t handle, int slave, uint32_t *v)
+{
+	return iic_read_n_le(handle, slave, v, 4);
+}
+
+int
+iic_read_4_be(iic_handle_t handle, int slave, uint32_t *v)
+{
+	return iic_read_n_be(handle, slave, v, 4);
 }
 
 int
 iic_read_4(iic_handle_t handle, int slave, uint32_t *v)
 {
-	return iic_read_n(handle, slave, v, 4);
+	return iic_read_n_se(handle, slave, v, 4);
+}
+
+int
+iic_read_8_le(iic_handle_t handle, int slave, uint64_t *v)
+{
+	return iic_read_n_le(handle, slave, v, 8);
+}
+
+int
+iic_read_8_be(iic_handle_t handle, int slave, uint64_t *v)
+{
+	return iic_read_n_be(handle, slave, v, 8);
 }
 
 int
 iic_read_8(iic_handle_t handle, int slave, uint64_t *v)
 {
-	return iic_read_n(handle, slave, v, 8);
+	return iic_read_n_se(handle, slave, v, 8);
 }
 
 int
-iic_read_n(iic_handle_t handle, int slave, void *v, size_t n)
+iic_read_n_le(iic_handle_t handle, int slave, void *v, size_t n)
+{
+#if BYTE_ORDER == LITTLE_ENDIAN
+	return iic_read_n_se(handle, slave, v, n);
+#else
+	return iic_read_n_de(handle, slave, v, n);
+#endif
+}
+
+int
+iic_read_n_be(iic_handle_t handle, int slave, void *v, size_t n)
+{
+#if BYTE_ORDER == BIG_ENDIAN
+	return iic_read_n_se(handle, slave, v, n);
+#else
+	return iic_read_n_de(handle, slave, v, n);
+#endif
+}
+
+/*
+ * Read N bytes Same Endian
+ */
+static int
+iic_read_n_se(iic_handle_t handle, int slave, void *v, size_t n)
 {
 	struct iic_msg msg;
 	struct iic_rdwr_data rdwr;
 
 	bzero(&msg, sizeof(msg));
 	bzero(&rdwr, sizeof(rdwr));
-
 	msg.slave = slave;
 	msg.flags = IIC_M_RD;
 	msg.len = n;
@@ -99,6 +161,29 @@ iic_read_n(iic_handle_t handle, int slave, void *v, size_t n)
 	rdwr.msgs = &msg;
 
 	return ioctl(handle, I2CRDWR, &rdwr);
+}
+
+/*
+ * Read N bytes Different Endian
+ */
+static int
+iic_read_n_de(iic_handle_t handle, int slave, void *v, size_t n)
+{
+	int err;
+	unsigned int i;
+	uint8_t *buf, tmp;
+	    
+	err = iic_read_n_se(handle, slave, v, n);
+	if (err)
+		return err;
+	buf = (uint8_t *)v;
+	for (i = 0; i < n / 2; i++) {
+		tmp = buf[n-i-1];
+		buf[n-i-1] = buf[i];
+		buf[i] = tmp;
+	}
+
+	return 0;
 }
 
 int

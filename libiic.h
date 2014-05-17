@@ -40,9 +40,17 @@ void		iic_close(iic_handle_t);
 
 int		iic_read_1(iic_handle_t, int, uint8_t *);
 int		iic_read_2(iic_handle_t, int, uint16_t *);
+int		iic_read_2_le(iic_handle_t, int, uint16_t *);
+int		iic_read_2_be(iic_handle_t, int, uint16_t *);
 int		iic_read_4(iic_handle_t, int, uint32_t *);
+int		iic_read_4_le(iic_handle_t, int, uint32_t *);
+int		iic_read_4_be(iic_handle_t, int, uint32_t *);
 int		iic_read_8(iic_handle_t, int, uint64_t *);
+int		iic_read_8_le(iic_handle_t, int, uint64_t *);
+int		iic_read_8_be(iic_handle_t, int, uint64_t *);
 int		iic_read_n(iic_handle_t, int, void *, size_t);
+int		iic_read_n_le(iic_handle_t, int, void *, size_t);
+int		iic_read_n_be(iic_handle_t, int, void *, size_t);
 
 int		iic_write_1(iic_handle_t, int, uint8_t);
 int		iic_write_2(iic_handle_t, int, uint16_t);
