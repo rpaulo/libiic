@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 project(libiic)
 add_library(iic SHARED iic.c)
-add_definitions(-I.)
+add_definitions(-I${CMAKE_SOURCE_DIR})
 set_property(TARGET iic PROPERTY SOVERSION "1")
