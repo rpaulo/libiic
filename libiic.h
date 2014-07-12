@@ -27,7 +27,7 @@
 #define _LIBIIC_H_
 
 #include <sys/types.h>
-#include <sys/iic.h>
+#include <dev/iicbus/iic.h>
 
 __BEGIN_DECLS
 
